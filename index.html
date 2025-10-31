@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>InlineNode CurveLab</title>
+  <title>InlineNode Tools</title>
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -16,162 +16,197 @@
   <link rel="stylesheet" href="src/css/style.css">
 </head>
 <body>
-  <div class="page">
-    <header class="header">
+  <div id="app" class="app" data-theme="light">
+    <aside class="sidebar">
       <div class="brand">
         <img src="assets/logo.svg" alt="InlineNode" class="logo" onerror="this.style.display='none'">
-        <div>
-          <h1>InlineNode CurveLab</h1>
-          <p class="subtitle">Regression, curve fitting, and engineering calculators — web-first, simple, educational.</p>
+        <div class="brand-text">
+          <div class="brand-title">InlineNode Tools</div>
+          <div class="brand-sub">Regression · Electronics · Calculators</div>
         </div>
       </div>
 
-      <nav class="tabs" role="tablist">
-        <button id="tab-curvelab" role="tab" aria-selected="true" class="tab active">CurveLab</button>
-        <button id="tab-electools" role="tab" aria-selected="false" class="tab">ElecTools</button>
-        <a href="#" id="open-sample" class="link small">Load sample data</a>
+      <nav class="nav">
+        <button class="nav-item active" data-view="curvelab">CurveLab</button>
+        <button class="nav-item" data-view="electools">ElecTools</button>
+        <button class="nav-item" data-view="about">About</button>
       </nav>
-    </header>
 
-    <main class="container">
+      <div class="sidebar-bottom">
+        <div class="theme-toggle">
+          <label class="switch">
+            <input id="theme-switch" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+          <div class="theme-label">Dark mode</div>
+        </div>
+        <div class="version">v0.2</div>
+      </div>
+    </aside>
+
+    <main class="main">
       <!-- CurveLab -->
-      <section id="curvelab" class="panel">
-        <div class="panel-row">
+      <section id="curvelab" class="view">
+        <div class="view-header">
+          <h2>CurveLab — Regression & Data</h2>
+          <div class="view-actions">
+            <button id="load-sample" class="btn small">Load sample data</button>
+            <label class="btn ghost small">
+              <input id="file-csv" type="file" accept=".csv" style="display:none" />
+              Import CSV
+            </label>
+            <button id="export-csv" class="btn ghost small">Export CSV</button>
+            <button id="clear-table" class="btn ghost small">Clear table</button>
+          </div>
+        </div>
+
+        <div class="card-grid">
           <div class="card card-left">
-            <h2>Data</h2>
-            <div class="form-row">
-              <label>Upload CSV (x,y)</label>
-              <input id="file-input" type="file" accept=".csv" />
+            <h3>Data table (editable)</h3>
+            <div class="table-wrap">
+              <table id="data-table" class="data-table" aria-label="Data input table">
+                <thead>
+                  <tr><th>X</th><th>Y</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
             </div>
 
-            <div class="form-row">
-              <label>Paste CSV (x,y)</label>
-              <textarea id="paste-area" placeholder="x,y\n1,2\n2,4" rows="6"></textarea>
+            <div class="small muted" style="margin-top:8px">
+              Tips: Paste CSV directly into the table (Ctrl+V). Start typing in the last row to add more rows.
             </div>
 
-            <div class="form-row small">
-              <label>Fit type</label>
+            <div style="margin-top:12px" class="form-row small">
               <select id="fit-type">
                 <option value="linear">Linear</option>
                 <option value="polynomial">Polynomial</option>
                 <option value="exponential">Exponential</option>
                 <option value="logarithmic">Logarithmic</option>
               </select>
-
               <label id="deg-label" style="display:none">Degree</label>
               <input id="poly-degree" type="number" min="1" max="8" value="2" style="width:72px;display:none" />
-            </div>
-
-            <div class="form-row">
               <button id="btn-fit" class="btn">Fit</button>
-              <button id="btn-export" class="btn ghost">Export fitted CSV</button>
-              <button id="btn-clear" class="btn ghost">Clear data</button>
             </div>
-
-            <div id="data-table-container" class="small muted"></div>
           </div>
 
           <div class="card card-right">
-            <h2>Plot</h2>
+            <h3>Plot & Results</h3>
             <div id="plot" class="plot"></div>
-            <div id="fit-info" class="small muted" style="margin-top:12px"></div>
+            <div id="fit-info" class="fit-info"></div>
           </div>
         </div>
       </section>
 
-      <!-- Electronics tools -->
-      <section id="electools" class="panel" style="display:none">
-        <div class="card-grid">
+      <!-- ElecTools -->
+      <section id="electools" class="view" style="display:none">
+        <div class="view-header">
+          <h2>ElecTools — Practical electronics calculators</h2>
+          <div class="view-actions">
+            <button id="elec-reset-all" class="btn ghost small">Reset</button>
+          </div>
+        </div>
+
+        <div class="card-grid-wide">
+          <!-- Ohm's Law -->
           <div class="card">
-            <h3>Ohm's Law</h3>
-            <div class="form-row">
-              <label>Voltage (V)</label>
-              <input id="ohm-v" type="number" step="any" />
+            <div class="card-head"><h3>Ohm's Law & Power</h3></div>
+            <div class="card-body">
+              <div class="grid-3">
+                <label>Voltage (V)</label><input id="ohm-v" type="number" step="any" placeholder="e.g. 12"><div class="units">V</div>
+                <label>Current (I)</label><input id="ohm-i" type="number" step="any" placeholder="e.g. 0.5"><div class="units">A</div>
+                <label>Resistance (R)</label><input id="ohm-r" type="number" step="any" placeholder="e.g. 24"><div class="units">Ω</div>
+                <label>Power (P)</label><input id="ohm-p" type="number" step="any" placeholder="e.g. 6"><div class="units">W</div>
+              </div>
+
+              <div class="calc-actions">
+                <button id="ohm-calc" class="btn">Calculate</button>
+                <button id="ohm-clear" class="btn ghost">Clear</button>
+              </div>
+
+              <div id="ohm-result" class="calc-result"></div>
             </div>
-            <div class="form-row">
-              <label>Current (A)</label>
-              <input id="ohm-i" type="number" step="any" />
-            </div>
-            <div class="form-row">
-              <label>Resistance (Ω)</label>
-              <input id="ohm-r" type="number" step="any" />
-            </div>
-            <div class="form-row">
-              <button id="ohm-calc" class="btn">Calculate</button>
-              <button id="ohm-clear" class="btn ghost">Clear</button>
-            </div>
-            <div id="ohm-result" class="small muted"></div>
           </div>
 
+          <!-- Voltage Divider -->
           <div class="card">
-            <h3>Voltage Divider</h3>
-            <div class="form-row">
-              <label>Vin (V)</label>
-              <input id="vd-vin" type="number" step="any" />
+            <div class="card-head"><h3>Voltage Divider</h3></div>
+            <div class="card-body">
+              <div class="grid-3">
+                <label>Source voltage (Vin)</label><input id="vd-vin" type="number" step="any" placeholder="e.g. 12"><div class="units">V</div>
+                <label>R1 (top)</label><input id="vd-r1" type="number" step="any" placeholder="e.g. 2200"><div class="units">Ω</div>
+                <label>R2 (bottom)</label><input id="vd-r2" type="number" step="any" placeholder="e.g. 1000"><div class="units">Ω</div>
+                <label>Output voltage (Vout)</label><input id="vd-vout" type="number" step="any" placeholder="e.g. 5"><div class="units">V</div>
+              </div>
+
+              <div class="calc-actions">
+                <button id="vd-calc" class="btn">Calculate</button>
+                <button id="vd-clear" class="btn ghost">Clear</button>
+              </div>
+
+              <div id="vd-result" class="calc-result"></div>
             </div>
-            <div class="form-row">
-              <label>R1 (Ω) - top</label>
-              <input id="vd-r1" type="number" step="any" />
-            </div>
-            <div class="form-row">
-              <label>R2 (Ω) - bottom</label>
-              <input id="vd-r2" type="number" step="any" />
-            </div>
-            <div class="form-row">
-              <button id="vd-calc" class="btn">Calculate</button>
-              <button id="vd-clear" class="btn ghost">Clear</button>
-            </div>
-            <div id="vd-result" class="small muted"></div>
           </div>
 
+          <!-- RC -->
           <div class="card">
-            <h3>Power</h3>
-            <div class="form-row">
-              <label>Voltage (V)</label>
-              <input id="p-v" type="number" step="any" />
+            <div class="card-head"><h3>RC Time Constant</h3></div>
+            <div class="card-body">
+              <div class="grid-3">
+                <label>Resistance (R)</label><input id="rc-r" type="number" step="any" placeholder="e.g. 1000"><div class="units">Ω</div>
+                <label>Capacitance (C)</label><input id="rc-c" type="number" step="any" placeholder="e.g. 1e-6"><div class="units">F</div>
+                <label>Time Constant (τ)</label><input id="rc-tau" type="number" step="any" placeholder="" readonly><div class="units">s</div>
+              </div>
+
+              <div class="calc-actions">
+                <button id="rc-calc" class="btn">Calculate τ</button>
+                <button id="rc-clear" class="btn ghost">Clear</button>
+              </div>
+
+              <div id="rc-result" class="calc-result"></div>
             </div>
-            <div class="form-row">
-              <label>Current (A)</label>
-              <input id="p-i" type="number" step="any" />
-            </div>
-            <div class="form-row">
-              <label>Resistance (Ω)</label>
-              <input id="p-r" type="number" step="any" />
-            </div>
-            <div class="form-row">
-              <button id="p-calc" class="btn">Calculate</button>
-              <button id="p-clear" class="btn ghost">Clear</button>
-            </div>
-            <div id="p-result" class="small muted"></div>
           </div>
 
+          <!-- Extra: Series/Parallel quick -->
           <div class="card">
-            <h3>RC Time Constant</h3>
-            <div class="form-row">
-              <label>Resistance (Ω)</label>
-              <input id="rc-r" type="number" step="any" />
+            <div class="card-head"><h3>Series & Parallel Resistances</h3></div>
+            <div class="card-body">
+              <div class="grid-3">
+                <label>R A</label><input id="rp-a" type="number" step="any"><div class="units">Ω</div>
+                <label>R B</label><input id="rp-b" type="number" step="any"><div class="units">Ω</div>
+                <label>Mode</label>
+                <select id="rp-mode">
+                  <option value="series">Series</option>
+                  <option value="parallel">Parallel</option>
+                </select><div class="units">&nbsp;</div>
+              </div>
+
+              <div class="calc-actions">
+                <button id="rp-calc" class="btn">Compute</button>
+                <button id="rp-clear" class="btn ghost">Clear</button>
+              </div>
+
+              <div id="rp-result" class="calc-result"></div>
             </div>
-            <div class="form-row">
-              <label>Capacitance (F)</label>
-              <input id="rc-c" type="number" step="any" />
-            </div>
-            <div class="form-row">
-              <button id="rc-calc" class="btn">Calculate τ</button>
-              <button id="rc-clear" class="btn ghost">Clear</button>
-            </div>
-            <div id="rc-result" class="small muted"></div>
           </div>
         </div>
       </section>
 
+      <!-- About -->
+      <section id="about" class="view" style="display:none">
+        <div class="view-header">
+          <h2>About InlineNode Tools</h2>
+        </div>
+        <div class="card">
+          <p>InlineNode Tools — a small suite of browser-based tools for regression and electronics calculations. Built to be lightweight, educational and portable. This is a v0.2 preview. </p>
+          <p>Data and preferences are stored locally in your browser only (no servers). When you want heavier computations, we'll plug in an API backend and keep the same UI.</p>
+        </div>
+      </section>
+
+      <footer class="footer">© InlineNode — built with math and mild sarcasm</footer>
     </main>
-
-    <footer class="footer">
-      <div class="muted">Made with math and mild sarcasm — InlineNode CurveLab v0.1</div>
-    </footer>
   </div>
 
-  <!-- App Scripts -->
+  <!-- Scripts -->
   <script src="src/js/utils.js"></script>
   <script src="src/js/regression.js"></script>
   <script src="src/js/plot.js"></script>
