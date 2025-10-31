@@ -1,33 +1,31 @@
-/* =============================
-   InlineNode Tools – CurveLab
-   Modernized island layout
-   ============================= */
+/* InlineNode Tools - CurveLab (PowerPoint layout version)
+   Modern, smooth, and structured
+----------------------------------------------------------*/
 
-/* Global reset */
+/* Global */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-  font-family: "Segoe UI", Arial, sans-serif;
 }
 
 body {
-  background-color: #f4f6f8;
+  font-family: "Segoe UI", Arial, sans-serif;
   color: #222;
+  background-color: #f4f6f8;
   height: 100vh;
   display: flex;
 }
 
-/* Layout structure */
+/* Layout */
 .app {
   display: flex;
   width: 100%;
   height: 100%;
-  border: 1px solid #c6c6c6; /* outer frame */
 }
 
-/* Sidebar */
+/* Sidebar (sharp edges) */
 .sidebar {
   width: 220px;
   background-color: #2e2e2e;
@@ -55,13 +53,6 @@ body {
   color: #ffffff;
 }
 
-/* Main section */
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
 /* Header (sharp edges) */
 .top-header {
   background-color: #2979d6;
@@ -80,93 +71,88 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 14px;
-  gap: 14px;
-  background-color: #f4f6f8;
+  padding: 18px;
+  gap: 18px;
 }
 
-/* Shared panel styling */
+/* Panels (rounded islands) */
 .panel {
   background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e1e1e1;
   display: flex;
   flex-direction: column;
-  border: 1px solid #dcdcdc;
 }
 
-/* Panel headers (blue bars) */
+/* Panel header (blue bar) */
 .panel-header {
   background-color: #2979d6;
   color: #fff;
   padding: 8px 12px;
   font-weight: 600;
-  border-radius: 10px 10px 0 0;
+  border-radius: 12px 12px 0 0;
 }
 
-/* Panel bodies */
+/* Panel body */
 .panel-body {
   padding: 12px;
 }
 
-/* Data & Plot alignment */
-.data-panel, .plot-panel {
-  display: inline-flex;
-  flex-direction: column;
-}
-
-.plot-panel {
-  margin-top: 0;
-}
-
-/* Table styles */
-.table-container {
-  display: flex;
-  flex-direction: column;
-}
-
+/* Data table section */
 .table-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: #e9eef4;
   padding: 8px 10px;
-  border-radius: 6px 6px 0 0;
+  border-radius: 8px;
+}
+
+.import-btn {
+  background-color: #2979d6;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.import-btn:hover {
+  background-color: #1f63b5;
 }
 
 .table-wrap {
   overflow-y: auto;
   border: 1px solid #d3d3d3;
   height: 260px;
-  border-radius: 0;
+  border-radius: 6px;
+  margin-top: 8px;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-}
-
-.data-table th, .data-table td {
-  border: 1px solid #d3d3d3;
-  padding: 6px 8px;
-  text-align: left;
   font-size: 13px;
 }
 
-/* Footer controls */
-.table-footer {
-  padding: 10px 0 0 0;
-  display: flex;
-  justify-content: flex-end;
+.data-table th,
+.data-table td {
+  border: 1px solid #d3d3d3;
+  padding: 6px 8px;
+  text-align: left;
 }
 
 .table-controls {
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
-/* Buttons */
+/* Buttons and dropdowns */
 .btn {
   cursor: pointer;
   font-weight: 600;
@@ -180,7 +166,6 @@ body {
 .btn.blue {
   background-color: #2979d6;
 }
-
 .btn.blue:hover {
   background-color: #1f63b5;
 }
@@ -188,12 +173,10 @@ body {
 .btn.red {
   background-color: #e53935;
 }
-
 .btn.red:hover {
   background-color: #c62828;
 }
 
-/* Dropdown */
 .dropdown {
   border: 1px solid #c2c2c2;
   border-radius: 6px;
@@ -203,7 +186,6 @@ body {
   cursor: pointer;
   color: #222;
 }
-
 .dropdown:hover {
   border-color: #2979d6;
 }
@@ -213,7 +195,7 @@ body {
   width: 100%;
   height: 280px;
   border: 1px solid #d3d3d3;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 /* Logger section */
@@ -224,7 +206,14 @@ body {
   padding: 10px;
   background: #f0f1f3;
   border: 1px solid #dcdcdc;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow-y: auto;
   min-height: 180px;
+}
+
+/* Smoothness */
+button,
+.dropdown,
+.import-btn {
+  transition: all 0.15s ease;
 }
