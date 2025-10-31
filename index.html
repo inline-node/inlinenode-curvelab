@@ -5,77 +5,116 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>InlineNode Tools — CurveLab</title>
 
-  <!-- Plotly & MathJS -->
+  <!-- Fonts (Courier New will be used, but include fallback) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Plotly & Math.js -->
   <script src="https://cdn.plot.ly/plotly-2.24.2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.js"></script>
 
   <link rel="stylesheet" href="src/css/style.css">
 </head>
 <body>
-  <div class="layout">
-    <aside class="sidebar" aria-label="Navigation">
-      <div class="brand">InlineNode Tools</div>
-      <nav class="side-nav" aria-label="Tools">
-        <button class="side-btn active" data-view="curvelab">CurveLab</button>
-        <button class="side-btn" data-view="electools">ElecTools</button>
+  <div id="app" class="app">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand-title">InlineNode Tools</div>
+
+      <nav class="nav" role="navigation" aria-label="Primary">
+        <button class="nav-item active" data-view="curvelab">CurveLab</button>
+        <div class="nav-group">
+          <button class="nav-item group-toggle" data-group="electools">ElecTools ▾</button>
+          <div class="nav-sub" id="electools-sub">
+            <button class="nav-sub-item" data-view="elec-vd">Voltage Divider</button>
+            <button class="nav-sub-item" data-view="elec-ohm">Ohm's Law</button>
+            <button class="nav-sub-item" data-view="elec-rc">RC Time Constant</button>
+            <button class="nav-sub-item" data-view="elec-rp">Series / Parallel</button>
+          </div>
+        </div>
       </nav>
     </aside>
 
-    <main class="main">
-      <header class="header">CURVELAB</header>
+    <main class="main" role="main">
+      <header class="main-header">
+        <h1 id="main-title">CurveLab</h1>
+      </header>
 
-      <section class="workspace" role="region" aria-label="CurveLab workspace">
+      <!-- WORKSPACE -->
+      <section id="workspace" class="workspace">
+        <!-- CurveLab layout (default) -->
+        <div id="curvelab" class="panel view active">
+          <div class="panel-left">
+            <div class="table-block">
+              <div class="table-head">
+                <h3 class="table-title">Data table (editable)</h3>
+                <label class="btn modern small import-topright">
+                  <input id="file-csv" type="file" accept=".csv" style="display:none" />
+                  Import CSV
+                </label>
+              </div>
 
-        <!-- LEFT COLUMN: table -->
-        <div class="left-col" role="region" aria-label="Data table column">
-          <div class="table-header">
-            <div class="table-title">Data Table (Editable)</div>
-            <label class="import-btn" title="Import CSV">
-              <input id="file-csv" type="file" accept=".csv" hidden>
-              Import CSV
-            </label>
-          </div>
+              <div class="table-wrap" id="table-wrap">
+                <table id="data-table" class="data-table" aria-label="Data input table">
+                  <thead><tr><th>X</th><th>Y</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
 
-          <div class="table-container">
-            <table id="data-table" class="data-table" aria-label="Data input table">
-              <thead>
-                <tr><th>X</th><th>Y</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+              <div class="table-footer">
+                <button id="clear-table" class="btn modern small clear-bottomright">Clear table</button>
+              </div>
 
-          <div class="table-footer">
-            <div class="controls-left">
-              <select id="fit-type" aria-label="Fit type selector">
-                <option value="linear">Linear</option>
-                <option value="polynomial">Polynomial</option>
-                <option value="exponential">Exponential</option>
-                <option value="logarithmic">Logarithmic</option>
-              </select>
-              <input id="poly-degree" type="number" min="1" max="8" value="2" aria-label="Polynomial degree" />
-              <button id="btn-fit" class="btn">Fit</button>
             </div>
 
-            <div class="controls-right">
-              <button id="clear-table" class="btn small">Clear</button>
+            <div class="fit-block">
+              <div class="fit-controls">
+                <select id="fit-type" class="modern-select" aria-label="Select fit type">
+                  <option value="linear">Linear</option>
+                  <option value="polynomial">Polynomial</option>
+                  <option value="exponential">Exponential</option>
+                  <option value="logarithmic">Logarithmic</option>
+                </select>
+
+                <input id="poly-degree" class="modern-input small" type="number" min="1" max="8" value="2" style="display:none" />
+
+                <button id="btn-fit" class="btn modern large">Fit</button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="panel-right">
+            <div class="plot-block">
+              <h3 class="plot-title">Plot</h3>
+              <div id="plot" class="plot"></div>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT COLUMN: plot -->
-        <div class="right-col" role="region" aria-label="Plot column">
-          <div id="plot" class="plot" aria-label="Plot area"></div>
+        <!-- ElecTools pages kept but unchanged -->
+        <div id="elec-vd" class="panel view" style="display:none">
+          <!-- content unchanged to preserve Nav; Elec pages still available -->
         </div>
+
+        <div id="elec-ohm" class="panel view" style="display:none"></div>
+        <div id="elec-rc" class="panel view" style="display:none"></div>
+        <div id="elec-rp" class="panel view" style="display:none"></div>
 
       </section>
 
-      <section id="logger" class="logger" role="log" aria-live="polite"></section>
+      <!-- LOGGER (single place for results & formulas) -->
+      <section class="logger-wrap">
+        <div id="logger" class="logger" role="log" aria-live="polite"></div>
+      </section>
 
       <footer class="footer">© InlineNode</footer>
     </main>
   </div>
 
+  <!-- JS (CurveLab-first) -->
+  <script src="src/js/logger.js"></script>
+  <script src="src/js/utils.js"></script>
+  <script src="src/js/regression.js"></script>
+  <script src="src/js/plot.js"></script>
   <script src="src/js/main.js"></script>
 </body>
 </html>
