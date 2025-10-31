@@ -6,7 +6,7 @@
   <title>InlineNode Tools</title>
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <!-- Plotly & Math.js -->
   <script src="https://cdn.plot.ly/plotly-2.24.2.min.js"></script>
@@ -17,18 +17,27 @@
 </head>
 <body>
   <div id="app" class="app" data-theme="light">
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Main navigation">
       <div class="brand">
-        <img src="assets/logo.svg" alt="InlineNode" class="logo" onerror="this.style.display='none'">
+        <img src="assets/logo.svg" alt="" class="logo" onerror="this.style.display='none'">
         <div class="brand-text">
           <div class="brand-title">InlineNode Tools</div>
-          <div class="brand-sub">Regression · Electronics · Calculators</div>
         </div>
       </div>
 
-      <nav class="nav">
-        <button class="nav-item active" data-view="curvelab">CurveLab</button>
-        <button class="nav-item" data-view="electools">ElecTools</button>
+      <nav class="nav" role="navigation" aria-label="Primary">
+        <button class="nav-item active" data-view="curvelab" aria-expanded="true">CurveLab</button>
+
+        <div class="nav-group">
+          <button class="nav-item group-toggle" data-group="electools">ElecTools ▾</button>
+          <div class="nav-sub" id="electools-sub">
+            <button class="nav-sub-item" data-view="elec-ohm">Ohm's Law</button>
+            <button class="nav-sub-item" data-view="elec-vd">Voltage Divider</button>
+            <button class="nav-sub-item" data-view="elec-rc">RC Time Constant</button>
+            <button class="nav-sub-item" data-view="elec-rp">Series / Parallel</button>
+          </div>
+        </div>
+
         <button class="nav-item" data-view="about">About</button>
       </nav>
 
@@ -40,30 +49,22 @@
           </label>
           <div class="theme-label">Dark mode</div>
         </div>
-        <div class="version">v0.2</div>
+        <div class="version">v0.4</div>
       </div>
     </aside>
 
-    <main class="main">
-      <!-- CurveLab -->
+    <main class="main" role="main">
+      <!-- CurveLab View -->
       <section id="curvelab" class="view">
         <div class="view-header">
-          <h2>CurveLab — Regression & Data</h2>
-          <div class="view-actions">
-            <button id="load-sample" class="btn small">Load sample data</button>
-            <label class="btn ghost small">
-              <input id="file-csv" type="file" accept=".csv" style="display:none" />
-              Import CSV
-            </label>
-            <button id="export-csv" class="btn ghost small">Export CSV</button>
-            <button id="clear-table" class="btn ghost small">Clear table</button>
-          </div>
+          <h2>CurveLab</h2>
+          <div class="view-actions" aria-hidden="true"></div>
         </div>
 
         <div class="card-grid">
           <div class="card card-left">
             <h3>Data table (editable)</h3>
-            <div class="table-wrap">
+            <div class="table-wrap" id="table-wrap">
               <table id="data-table" class="data-table" aria-label="Data input table">
                 <thead>
                   <tr><th>X</th><th>Y</th></tr>
@@ -72,12 +73,19 @@
               </table>
             </div>
 
-            <div class="small muted" style="margin-top:8px">
-              Tips: Paste CSV directly into the table (Ctrl+V). Start typing in the last row to add more rows.
+            <div class="table-controls">
+              <label class="btn ghost small">
+                <input id="file-csv" type="file" accept=".csv" style="display:none" />
+                Import CSV
+              </label>
+              <button id="export-csv" class="btn ghost small">Export CSV</button>
+              <button id="clear-table" class="btn ghost small">Clear table</button>
             </div>
 
-            <div style="margin-top:12px" class="form-row small">
-              <select id="fit-type">
+            <div class="hint small muted">Tip: Paste directly from Excel / Sheets into the table. Only first two columns will be used.</div>
+
+            <div class="form-row small" style="margin-top:12px">
+              <select id="fit-type" aria-label="Select fit type">
                 <option value="linear">Linear</option>
                 <option value="polynomial">Polynomial</option>
                 <option value="exponential">Exponential</option>
@@ -91,118 +99,133 @@
 
           <div class="card card-right">
             <h3>Plot & Results</h3>
-            <div id="plot" class="plot"></div>
-            <div id="fit-info" class="fit-info"></div>
+            <div id="plot" class="plot" role="img" aria-label="Data plot"></div>
+            <div id="fit-info" class="fit-info" aria-live="polite"></div>
           </div>
         </div>
       </section>
 
-      <!-- ElecTools -->
-      <section id="electools" class="view" style="display:none">
+      <!-- ElecTool - Ohm's Law -->
+      <section id="elec-ohm" class="view" style="display:none">
         <div class="view-header">
-          <h2>ElecTools — Practical electronics calculators</h2>
-          <div class="view-actions">
-            <button id="elec-reset-all" class="btn ghost small">Reset</button>
+          <h2>Ohm's Law</h2>
+        </div>
+        <div class="card">
+          <div class="explain">
+            <strong>Equations</strong>: V = I × R, P = V × I
+            <div class="small muted">Provide any two known values (V, I, R or P) and press Calculate. Units: V (volts), A (amps), Ω (ohms), W (watts).</div>
+          </div>
+
+          <div class="card-body">
+            <div class="grid-3">
+              <label>Voltage (V)</label><input id="ohm-v" type="number" step="any" placeholder=""><div class="units">V</div>
+              <label>Current (I)</label><input id="ohm-i" type="number" step="any" placeholder=""><div class="units">A</div>
+              <label>Resistance (R)</label>
+                <div class="input-with-unit">
+                  <input id="ohm-r" type="number" step="any" placeholder="">
+                  <select id="ohm-r-unit" class="unit-select"><option value="1">Ω</option><option value="1000">kΩ</option></select>
+                </div><div class="units">Ω</div>
+              <label>Power (P)</label><input id="ohm-p" type="number" step="any" placeholder=""><div class="units">W</div>
+            </div>
+
+            <div class="calc-actions">
+              <button id="ohm-calc" class="btn">Calculate</button>
+              <button id="ohm-clear" class="btn ghost">Clear</button>
+            </div>
+            <div id="ohm-result" class="calc-result monospace" aria-live="polite"></div>
           </div>
         </div>
+      </section>
 
-        <div class="card-grid-wide">
-          <!-- Ohm's Law -->
-          <div class="card">
-            <div class="card-head"><h3>Ohm's Law & Power</h3></div>
-            <div class="card-body">
-              <div class="grid-3">
-                <label>Voltage (V)</label><input id="ohm-v" type="number" step="any" placeholder="e.g. 12"><div class="units">V</div>
-                <label>Current (I)</label><input id="ohm-i" type="number" step="any" placeholder="e.g. 0.5"><div class="units">A</div>
-                <label>Resistance (R)</label><input id="ohm-r" type="number" step="any" placeholder="e.g. 24"><div class="units">Ω</div>
-                <label>Power (P)</label><input id="ohm-p" type="number" step="any" placeholder="e.g. 6"><div class="units">W</div>
-              </div>
-
-              <div class="calc-actions">
-                <button id="ohm-calc" class="btn">Calculate</button>
-                <button id="ohm-clear" class="btn ghost">Clear</button>
-              </div>
-
-              <div id="ohm-result" class="calc-result"></div>
-            </div>
+      <!-- ElecTool - Voltage Divider -->
+      <section id="elec-vd" class="view" style="display:none">
+        <div class="view-header"><h2>Voltage Divider</h2></div>
+        <div class="card">
+          <div class="explain">
+            <strong>Equation</strong>: V<sub>out</sub> = V<sub>in</sub> × (R₂ / (R₁ + R₂))
+            <div class="small muted">Provide any three of Vin, R1, R2, Vout to compute the fourth. R units selectable (Ω / kΩ).</div>
           </div>
-
-          <!-- Voltage Divider -->
-          <div class="card">
-            <div class="card-head"><h3>Voltage Divider</h3></div>
-            <div class="card-body">
-              <div class="grid-3">
-                <label>Source voltage (Vin)</label><input id="vd-vin" type="number" step="any" placeholder="e.g. 12"><div class="units">V</div>
-                <label>R1 (top)</label><input id="vd-r1" type="number" step="any" placeholder="e.g. 2200"><div class="units">Ω</div>
-                <label>R2 (bottom)</label><input id="vd-r2" type="number" step="any" placeholder="e.g. 1000"><div class="units">Ω</div>
-                <label>Output voltage (Vout)</label><input id="vd-vout" type="number" step="any" placeholder="e.g. 5"><div class="units">V</div>
-              </div>
-
-              <div class="calc-actions">
-                <button id="vd-calc" class="btn">Calculate</button>
-                <button id="vd-clear" class="btn ghost">Clear</button>
-              </div>
-
-              <div id="vd-result" class="calc-result"></div>
+          <div class="card-body">
+            <div class="grid-3">
+              <label>Source voltage (Vin)</label><input id="vd-vin" type="number" step="any"><div class="units">V</div>
+              <label>R1 (top)</label>
+                <div class="input-with-unit">
+                  <input id="vd-r1" type="number" step="any">
+                  <select id="vd-r1-unit" class="unit-select"><option value="1">Ω</option><option value="1000">kΩ</option></select>
+                </div><div class="units">Ω</div>
+              <label>R2 (bottom)</label>
+                <div class="input-with-unit">
+                  <input id="vd-r2" type="number" step="any">
+                  <select id="vd-r2-unit" class="unit-select"><option value="1">Ω</option><option value="1000">kΩ</option></select>
+                </div><div class="units">Ω</div>
+              <label>Output voltage (Vout)</label><input id="vd-vout" type="number" step="any"><div class="units">V</div>
             </div>
+
+            <div class="calc-actions">
+              <button id="vd-calc" class="btn">Calculate</button>
+              <button id="vd-clear" class="btn ghost">Clear</button>
+            </div>
+            <div id="vd-result" class="calc-result monospace" aria-live="polite"></div>
           </div>
+        </div>
+      </section>
 
-          <!-- RC -->
-          <div class="card">
-            <div class="card-head"><h3>RC Time Constant</h3></div>
-            <div class="card-body">
-              <div class="grid-3">
-                <label>Resistance (R)</label><input id="rc-r" type="number" step="any" placeholder="e.g. 1000"><div class="units">Ω</div>
-                <label>Capacitance (C)</label><input id="rc-c" type="number" step="any" placeholder="e.g. 1e-6"><div class="units">F</div>
-                <label>Time Constant (τ)</label><input id="rc-tau" type="number" step="any" placeholder="" readonly><div class="units">s</div>
-              </div>
-
-              <div class="calc-actions">
-                <button id="rc-calc" class="btn">Calculate τ</button>
-                <button id="rc-clear" class="btn ghost">Clear</button>
-              </div>
-
-              <div id="rc-result" class="calc-result"></div>
+      <!-- ElecTool - RC -->
+      <section id="elec-rc" class="view" style="display:none">
+        <div class="view-header"><h2>RC Time Constant</h2></div>
+        <div class="card">
+          <div class="explain"><strong>Equation</strong>: τ = R × C (seconds)</div>
+          <div class="card-body">
+            <div class="grid-3">
+              <label>Resistance (R)</label>
+                <div class="input-with-unit">
+                  <input id="rc-r" type="number" step="any">
+                  <select id="rc-r-unit" class="unit-select"><option value="1">Ω</option><option value="1000">kΩ</option></select>
+                </div><div class="units">Ω</div>
+              <label>Capacitance (C)</label><input id="rc-c" type="number" step="any" placeholder="e.g. 1e-6"><div class="units">F</div>
+              <label>Time constant (τ)</label><input id="rc-tau" type="text" readonly><div class="units">s</div>
             </div>
+
+            <div class="calc-actions">
+              <button id="rc-calc" class="btn">Calculate τ</button>
+              <button id="rc-clear" class="btn ghost">Clear</button>
+            </div>
+            <div id="rc-result" class="calc-result monospace" aria-live="polite"></div>
           </div>
+        </div>
+      </section>
 
-          <!-- Extra: Series/Parallel quick -->
-          <div class="card">
-            <div class="card-head"><h3>Series & Parallel Resistances</h3></div>
-            <div class="card-body">
-              <div class="grid-3">
-                <label>R A</label><input id="rp-a" type="number" step="any"><div class="units">Ω</div>
-                <label>R B</label><input id="rp-b" type="number" step="any"><div class="units">Ω</div>
-                <label>Mode</label>
-                <select id="rp-mode">
-                  <option value="series">Series</option>
-                  <option value="parallel">Parallel</option>
-                </select><div class="units">&nbsp;</div>
-              </div>
-
-              <div class="calc-actions">
-                <button id="rp-calc" class="btn">Compute</button>
-                <button id="rp-clear" class="btn ghost">Clear</button>
-              </div>
-
-              <div id="rp-result" class="calc-result"></div>
+      <!-- ElecTool - Series/Parallel -->
+      <section id="elec-rp" class="view" style="display:none">
+        <div class="view-header"><h2>Series & Parallel Resistances</h2></div>
+        <div class="card">
+          <div class="explain"><strong>Quick</strong>: compute combined resistance for two resistors.</div>
+          <div class="card-body">
+            <div class="grid-3">
+              <label>R A</label><input id="rp-a" type="number" step="any"><div class="units">Ω</div>
+              <label>R B</label><input id="rp-b" type="number" step="any"><div class="units">Ω</div>
+              <label>Mode</label>
+                <select id="rp-mode"><option value="series">Series</option><option value="parallel">Parallel</option></select><div class="units"></div>
             </div>
+
+            <div class="calc-actions">
+              <button id="rp-calc" class="btn">Compute</button>
+              <button id="rp-clear" class="btn ghost">Clear</button>
+            </div>
+            <div id="rp-result" class="calc-result monospace" aria-live="polite"></div>
           </div>
         </div>
       </section>
 
       <!-- About -->
       <section id="about" class="view" style="display:none">
-        <div class="view-header">
-          <h2>About InlineNode Tools</h2>
-        </div>
+        <div class="view-header"><h2>About</h2></div>
         <div class="card">
-          <p>InlineNode Tools — a small suite of browser-based tools for regression and electronics calculations. Built to be lightweight, educational and portable. This is a v0.2 preview. </p>
-          <p>Data and preferences are stored locally in your browser only (no servers). When you want heavier computations, we'll plug in an API backend and keep the same UI.</p>
+          <p>InlineNode Tools — helpful, educational engineering calculators and regression tools. Data and preferences remain local to your browser. v0.4</p>
         </div>
       </section>
 
-      <footer class="footer">© InlineNode — built with math and mild sarcasm</footer>
+      <footer class="footer">© InlineNode</footer>
     </main>
   </div>
 
