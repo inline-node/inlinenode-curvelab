@@ -1,16 +1,13 @@
-// utils.js - helpers for CSV, download, rounding, parsing pasted clipboard
+// utils.js - CSV parsing, download, rounding
 const Utils = (() => {
   function parseCSV(text) {
     if (!text) return [];
-    // accept tabs or commas; return array of {x,y}
     const lines = text.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const out = [];
     for (const line of lines) {
-      // split on tab or comma
       const cols = line.split(/\t|,/).map(c => c.trim());
       if (cols.length < 2) continue;
-      const x = parseFloat(cols[0]);
-      const y = parseFloat(cols[1]);
+      const x = parseFloat(cols[0]); const y = parseFloat(cols[1]);
       if (!isFinite(x) || !isFinite(y)) continue;
       out.push({x, y});
     }
