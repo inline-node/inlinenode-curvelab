@@ -1,29 +1,20 @@
-// logger.js - simple timestamped logger used by all modules
+// logger.js - only prints computation results & formula breakdowns (no timestamps)
 const Logger = (() => {
   const el = () => document.getElementById('logger');
 
-  function timeStamp() {
-    const d = new Date();
-    return d.toLocaleTimeString();
-  }
-
-  function push(level, msg) {
+  function push(msg) {
     const container = el();
     if (!container) return;
-    const line = document.createElement('div');
-    const tspan = document.createElement('span'); tspan.className = 'time'; tspan.textContent = `[${timeStamp()}]`;
-    const mspan = document.createElement('span'); mspan.className = level; mspan.textContent = ` ${msg}`;
-    line.appendChild(tspan); line.appendChild(mspan);
-    container.appendChild(line);
+    const block = document.createElement('div');
+    block.textContent = msg;
+    container.appendChild(block);
     container.scrollTop = container.scrollHeight;
-    // also console.log for debug
-    console.log(`[${timeStamp()}] ${msg}`);
+    // also console for dev
+    console.log(msg);
   }
 
   return {
-    info: (m) => push('info', m),
-    ok: (m) => push('ok', m),
-    warn: (m) => push('warn', m),
-    err: (m) => push('err', m)
+    info: (m) => push(m),
+    clear: () => { const c = el(); if (c) c.innerHTML = ''; }
   };
 })();
