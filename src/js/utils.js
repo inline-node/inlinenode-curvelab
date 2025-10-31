@@ -1,4 +1,4 @@
-// utils.js - CSV parsing, download, rounding
+// utils.js - CSV parsing & rounding
 const Utils = (() => {
   function parseCSV(text) {
     if (!text) return [];
@@ -14,22 +14,7 @@ const Utils = (() => {
     return out;
   }
 
-  function csvFromArray(xs, ys, header = 'x,y') {
-    const rows = [header];
-    for (let i=0;i<xs.length;i++) rows.push(`${xs[i]},${ys[i]}`);
-    return rows.join('\n');
-  }
-
-  function downloadText(filename, text, mime='text/csv') {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([text], {type: mime}));
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1200);
-  }
-
   function round(v, digits=6) { return Number.isFinite(v) ? Number.parseFloat(v).toPrecision(digits) : v; }
 
-  return { parseCSV, csvFromArray, downloadText, round };
+  return { parseCSV, round };
 })();
