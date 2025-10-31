@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>InlineNode Tools - CurveLab</title>
+
   <link rel="stylesheet" href="src/css/style.css" />
   <script src="https://cdn.plot.ly/plotly-2.24.2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.js"></script>
@@ -21,74 +22,67 @@
       </nav>
     </aside>
 
-    <!-- Main content area -->
+    <!-- Main Area -->
     <main class="main">
-
-      <!-- Top header -->
+      <!-- Header -->
       <header class="top-header">
         <h1>CurveLab – Simple Analysis</h1>
       </header>
 
-      <!-- Content workspace -->
+      <!-- Workspace -->
       <section class="workspace">
 
-        <!-- Data Panel -->
-        <div class="panel data-panel">
+        <!-- DATA PANEL -->
+        <section class="panel data-panel">
           <div class="panel-header">Data</div>
           <div class="panel-body">
 
-            <div class="table-container">
-              <div class="table-head">
-                <span>Data Table (Editable)</span>
-                <label class="btn import-btn">
-                  <input id="file-csv" type="file" accept=".csv" hidden />
-                  Import CSV
-                </label>
-              </div>
+            <div class="table-head">
+              <span>Data Table (Editable)</span>
+              <label class="btn import-btn">
+                <input id="file-csv" type="file" accept=".csv" hidden />
+                Import CSV
+              </label>
+            </div>
 
-              <div class="table-wrap">
-                <table id="data-table" class="data-table">
-                  <thead><tr><th>X</th><th>Y</th></tr></thead>
-                  <tbody></tbody>
-                </table>
-              </div>
+            <div class="table-wrap">
+              <table id="data-table" class="data-table">
+                <thead><tr><th>X</th><th>Y</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
 
-              <div class="table-footer">
-                <div class="table-controls">
-                  <select id="fit-type" class="dropdown">
-                    <option value="linear">Linear</option>
-                    <option value="polynomial">Polynomial</option>
-                    <option value="logarithmic">Logarithmic</option>
-                    <option value="exponential">Exponential</option>
-                  </select>
-
-                  <button id="btn-fit" class="btn blue">CurveFit</button>
-                  <button id="btn-trash" class="btn red" title="Clear Table">🗑</button>
-                </div>
-              </div>
+            <div class="table-controls">
+              <select id="fit-type" class="dropdown">
+                <option value="linear">Linear</option>
+                <option value="polynomial">Polynomial</option>
+                <option value="logarithmic">Logarithmic</option>
+                <option value="exponential">Exponential</option>
+              </select>
+              <button id="btn-fit" class="btn blue">CurveFit</button>
+              <button id="btn-trash" class="btn red" title="Clear Table">🗑</button>
             </div>
 
           </div>
-        </div>
+        </section>
 
-        <!-- Plot Panel -->
-        <div class="panel plot-panel">
+        <!-- PLOT PANEL -->
+        <section class="panel plot-panel">
           <div class="panel-header">Data Plot</div>
           <div class="panel-body">
             <div id="plot" class="plot"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- Logger Panel -->
-        <div class="panel log-panel">
+        <!-- LOGGER PANEL -->
+        <section class="panel log-panel">
           <div class="panel-header">Messages & Results</div>
           <div class="panel-body">
             <div id="logger" class="logger"></div>
           </div>
-        </div>
+        </section>
 
       </section>
-
     </main>
   </div>
 
