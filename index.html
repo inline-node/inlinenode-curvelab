@@ -5,68 +5,76 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>InlineNode Tools — CurveLab</title>
 
+  <!-- Plotly and mathjs -->
   <script src="https://cdn.plot.ly/plotly-2.24.2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.js"></script>
-  <link rel="stylesheet" href="src/css/style.css" />
-</head>
 
+  <link rel="stylesheet" href="src/css/style.css">
+</head>
 <body>
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">InlineNode Tools</div>
-      <nav>
-        <button class="nav active" data-view="curvelab">CurveLab</button>
-        <button class="nav" data-view="elec">ElecTools</button>
+      <nav class="side-nav">
+        <button class="side-btn active" data-view="curvelab">CurveLab</button>
+        <button class="side-btn" data-view="electools">ElecTools</button>
       </nav>
     </aside>
 
     <main class="main">
       <header class="header">CURVELAB</header>
 
+      <!-- main workspace (fixed grid) -->
       <section class="workspace">
-        <div class="left">
-          <div class="table-wrap">
-            <div class="table-header">
-              <span>Data Table (Editable)</span>
-              <label class="btn small">
-                <input id="file-csv" type="file" accept=".csv" hidden />
-                Import CSV
-              </label>
-            </div>
 
+        <!-- left: table column -->
+        <div class="left-col">
+          <div class="table-header">
+            <div class="table-title">Data Table (Editable)</div>
+            <label class="import-btn">
+              <input id="file-csv" type="file" accept=".csv" hidden>
+              Import CSV
+            </label>
+          </div>
+
+          <div class="table-container">
             <table id="data-table">
               <thead><tr><th>X</th><th>Y</th></tr></thead>
               <tbody></tbody>
             </table>
+          </div>
 
-            <div class="table-footer">
-              <select id="fit-type">
+          <div class="table-footer">
+            <div class="controls-left">
+              <select id="fit-type" title="Select fit type">
                 <option value="linear">Linear</option>
                 <option value="polynomial">Polynomial</option>
                 <option value="exponential">Exponential</option>
                 <option value="logarithmic">Logarithmic</option>
               </select>
-              <input id="poly-degree" type="number" min="1" max="8" value="2" />
+              <input id="poly-degree" type="number" min="1" max="8" value="2" title="Polynomial degree" />
               <button id="btn-fit" class="btn">Fit</button>
+            </div>
+            <div class="controls-right">
               <button id="clear-table" class="btn small">Clear</button>
             </div>
           </div>
         </div>
 
-        <div class="right">
+        <!-- right: plot column -->
+        <div class="right-col">
           <div id="plot" class="plot"></div>
         </div>
+
       </section>
 
-      <section class="logger" id="logger"></section>
+      <!-- logger attached directly below -->
+      <section id="logger" class="logger" role="log" aria-live="polite"></section>
+
       <footer class="footer">© InlineNode</footer>
     </main>
   </div>
 
-  <script src="src/js/logger.js"></script>
-  <script src="src/js/utils.js"></script>
-  <script src="src/js/regression.js"></script>
-  <script src="src/js/plot.js"></script>
   <script src="src/js/main.js"></script>
 </body>
 </html>
