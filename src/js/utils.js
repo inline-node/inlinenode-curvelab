@@ -1,4 +1,4 @@
-// utils.js - CSV parsing & rounding
+// utils.js - light helpers (CSV parsing)
 const Utils = (() => {
   function parseCSV(text) {
     if (!text) return [];
@@ -13,10 +13,5 @@ const Utils = (() => {
     }
     return out;
   }
-
-  function round(v, digits=6) { return Number.isFinite(v) ? Number.parseFloat(v).toPrecision(digits) : v; }
-
-  return { parseCSV, round };
+  return { parseCSV };
 })();
-
-
