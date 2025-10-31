@@ -1,4 +1,4 @@
-// regression.js
+// regression.js - fits used by CurveLab
 const Regression = (() => {
   function linearFit(data) {
     const n = data.length; if (n < 2) return null;
@@ -12,7 +12,7 @@ const Regression = (() => {
     const ssRes = math.sum(residuals.map(r=> r*r));
     const ssTot = math.sum(ys.map(y=> Math.pow(y - yBar, 2)));
     const r2 = 1 - (ssRes / ssTot);
-    return { coeffs: [m,b], r2, predict, degree:1 };
+    return { coeffs: [m,b], r2, predict, degree:1, stderr: Math.sqrt(ssRes/(n-2)||0) };
   }
 
   function polynomialFit(data, degree=2) {
@@ -29,7 +29,7 @@ const Regression = (() => {
     const yBar = math.mean(ys); const residuals = ys.map((y,i)=> y - predict(xs[i]));
     const ssRes = math.sum(residuals.map(r=> r*r)); const ssTot = math.sum(ys.map(y=> Math.pow(y - yBar, 2)));
     const r2 = 1 - ssRes / ssTot;
-    return { coeffs, r2, predict, degree };
+    return { coeffs, r2, predict, degree, stderr: Math.sqrt(ssRes/(n - m) || 0) };
   }
 
   function exponentialFit(data) {
@@ -43,7 +43,7 @@ const Regression = (() => {
     const residuals = filtered.map((d,i)=> d.y - predict(d.x)); const ssRes = math.sum(residuals.map(r=> r*r));
     const ssTot = math.sum(filtered.map(d=> Math.pow(d.y - math.mean(filtered.map(f=>f.y)), 2)));
     const r2 = 1 - ssRes / ssTot;
-    return { coeffs: [A,B], r2, predict, type:'exp' };
+    return { coeffs: [A,B], r2, predict, type:'exp', stderr: Math.sqrt(ssRes/(filtered.length-2)||0) };
   }
 
   function logarithmicFit(data) {
@@ -57,7 +57,7 @@ const Regression = (() => {
     const residuals = filtered.map((d,i)=> d.y - predict(d.x)); const ssRes = math.sum(residuals.map(r=> r*r));
     const ssTot = math.sum(filtered.map(d=> Math.pow(d.y - math.mean(filtered.map(f=>f.y)), 2)));
     const r2 = 1 - ssRes / ssTot;
-    return { coeffs: [A,B], r2, predict, type:'log' };
+    return { coeffs: [A,B], r2, predict, type:'log', stderr: Math.sqrt(ssRes/(filtered.length-2)||0) };
   }
 
   return { linearFit, polynomialFit, exponentialFit, logarithmicFit };
