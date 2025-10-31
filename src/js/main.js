@@ -1,14 +1,13 @@
-/* main.js — full wiring for CurveLab v0.7
-   - CSV import
-   - paste from clipboard into table cells (multi-row support)
-   - fixed table row creation, internal scrolling
-   - fits: linear, polynomial, exponential, logarithmic
-   - plotting with Plotly
-   - logger prints formula + substitution + results (no timestamps)
+/* main.js — Complete functional CurveLab v0.7
+   - Full regression (linear, polynomial, exponential, logarithmic)
+   - Plotting (Plotly)
+   - CSV import, clipboard paste (Excel), Clear
+   - Table internal scrolling (tbody), controls always visible
+   - Logger shows formula + substitutions + results (no timestamps)
 */
 
 (() => {
-  // ---------- Utilities ----------
+  // UTILITIES
   const Utils = {
     parseCSV(text) {
       if (!text) return [];
@@ -23,35 +22,21 @@
       }
       return out;
     },
-    round(v, p=6) {
-      return Number.isFinite(v) ? Number.parseFloat(v).toPrecision(p) : v;
-    }
+    round(v, p = 6) { return Number.isFinite(v) ? Number.parseFloat(v).toPrecision(p) : v; }
   };
 
-  // ---------- Logger ----------
+  // LOGGER (single place)
   const Logger = (() => {
     const el = document.getElementById('logger');
     return {
-      info(txt) {
-        if (!el) return;
-        el.textContent = txt;
-        el.scrollTop = el.scrollHeight;
-      },
-      append(txt) {
-        if (!el) return;
-        const div = document.createElement('div'); div.textContent = txt;
-        el.appendChild(div); el.scrollTop = el.scrollHeight;
-      },
-      clear() {
-        if (!el) return;
-        el.innerHTML = '';
-      }
+      set(text) { if (el) { el.textContent = text; el.scrollTop = el.scrollHeight; } },
+      clear() { if (el) el.innerHTML = ''; },
+      append(text) { if (el) { const d = document.createElement('div'); d.textContent = text; el.appendChild(d); el.scrollTop = el.scrollHeight; } }
     };
   })();
 
-  // ---------- Regression functions ----------
+  // REGRESSION implementation (uses mathjs)
   const Regression = (() => {
-
     function linearFit(data) {
       const n = data.length; if (n < 2) return null;
       const xs = data.map(d => d.x), ys = data.map(d => d.y);
@@ -74,29 +59,18 @@
       if (n < degree + 1) return null;
       const xs = data.map(d => d.x), ys = data.map(d => d.y);
       const m = degree + 1;
-      // Build Vandermonde X matrix (n x m)
-      const X = [];
-      for (let i = 0; i < n; i++) {
-        const row = [];
-        for (let j = 0; j < m; j++) row.push(Math.pow(xs[i], j));
-        X.push(row);
-      }
+      // Vandermonde X (n x m)
+      const X = xs.map(x => Array.from({ length: m }, (_, j) => Math.pow(x, j)));
       const XT = math.transpose(X);
       const A = math.multiply(XT, X);
       const bVec = math.multiply(XT, ys);
       let coeffs;
       try {
-        coeffs = math.lusolve(A, bVec).map(r => r[0]);
+        const sol = math.lusolve(A, math.matrix(bVec));
+        coeffs = sol.map(r => r[0]).valueOf ? sol.map(r => r[0]).valueOf() : sol;
       } catch (e) {
-        // fallback pseudo-inverse
-        try {
-          coeffs = math.multiply(math.inv(A), bVec);
-        } catch (e2) {
-          return null;
-        }
+        try { coeffs = math.multiply(math.inv(A), bVec); } catch (e2) { return null; }
       }
-      // ensure array
-      if (math.typeof(coeffs) === 'Matrix') coeffs = coeffs.valueOf().map(r => r[0] || r);
       coeffs = coeffs.map(v => Number(v));
       const predict = x => coeffs.reduce((s, c, i) => s + c * Math.pow(x, i), 0);
       const yBar = math.mean(ys);
@@ -109,11 +83,9 @@
     }
 
     function exponentialFit(data) {
-      // y = A * exp(B x), take ln(y)
       const filtered = data.filter(d => d.y > 0);
       if (filtered.length < 2) return null;
-      const xs = filtered.map(d => d.x);
-      const ysLog = filtered.map(d => Math.log(d.y));
+      const xs = filtered.map(d => d.x), ysLog = filtered.map(d => Math.log(d.y));
       const xBar = math.mean(xs), yBar = math.mean(ysLog);
       const ssXY = math.sum(xs.map((x, i) => (x - xBar) * (ysLog[i] - yBar)));
       const ssXX = math.sum(xs.map(x => Math.pow(x - xBar, 2)));
@@ -130,7 +102,6 @@
     }
 
     function logarithmicFit(data) {
-      // y = A + B ln(x)
       const filtered = data.filter(d => d.x > 0);
       if (filtered.length < 2) return null;
       const xs = filtered.map(d => Math.log(d.x)), ys = filtered.map(d => d.y);
@@ -151,13 +122,14 @@
     return { linearFit, polynomialFit, exponentialFit, logarithmicFit };
   })();
 
-  // ---------- Plot helper ----------
+  // PLOTTING
   const Plotter = (() => {
     function linspace(a, b, n) {
       const out = []; const step = (b - a) / (n - 1 || 1);
       for (let i = 0; i < n; i++) out.push(a + i * step);
       return out;
     }
+
     function plotScatterWithFit(el, data, predictFunc) {
       if (!el) return;
       if (!data || !data.length) { el.innerHTML = ''; return; }
@@ -183,18 +155,19 @@
     return { plotScatterWithFit };
   })();
 
-  // ---------- Table management ----------
-  function createEditableRow(x = '', y = '') {
+  // TABLE helpers & paste support
+  const tbody = document.querySelector('#data-table tbody');
+  function createRow(x = '', y = '') {
     const tr = document.createElement('tr');
     const tdX = document.createElement('td'); tdX.contentEditable = true; tdX.spellcheck = false; tdX.innerText = x;
     const tdY = document.createElement('td'); tdY.contentEditable = true; tdY.spellcheck = false; tdY.innerText = y;
     tr.appendChild(tdX); tr.appendChild(tdY);
 
-    // Enter moves to next cell or creates a new row
+    // Enter behavior
     tdX.addEventListener('keydown', (e) => handleCellKey(e, tdX));
     tdY.addEventListener('keydown', (e) => handleCellKey(e, tdY));
 
-    // paste support
+    // Paste multi-row
     tdX.addEventListener('paste', handlePaste);
     tdY.addEventListener('paste', handlePaste);
 
@@ -204,18 +177,18 @@
   function handleCellKey(e, cell) {
     if (e.key === 'Enter') {
       e.preventDefault();
-      // move to next cell in the row or create a new row
-      const next = cell.nextElementSibling || cell.parentElement.nextElementSibling?.firstElementChild;
-      if (next) { selectAllText(next); }
+      const tr = cell.parentElement;
+      const nextTD = cell.nextElementSibling;
+      if (nextTD) { selectAll(nextTD); }
       else {
         appendEmptyRow();
-        const last = tbody.querySelector('tr:last-child td:first-child');
-        if (last) selectAllText(last);
+        const lastFirst = tbody.querySelector('tr:last-child td:first-child');
+        if (lastFirst) selectAll(lastFirst);
       }
     }
   }
 
-  function selectAllText(el) {
+  function selectAll(el) {
     const range = document.createRange();
     range.selectNodeContents(el);
     const sel = window.getSelection();
@@ -230,22 +203,27 @@
     if (!text) return;
     const rows = text.trim().split(/\r?\n/).map(r => r.split(/\t|,/).map(c => c.trim()));
     const startTr = e.target.parentElement;
-    let startIndex = Array.from(tbody.querySelectorAll('tr')).indexOf(startTr);
+    let startIndex = Array.from(tbody.children).indexOf(startTr);
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      const targetTr = tbody.children[startIndex + i] || appendEmptyRow();
-      if (row.length > 0) targetTr.children[0].innerText = row[0] || '';
-      if (row.length > 1) targetTr.children[1].innerText = row[1] || '';
+      const target = tbody.children[startIndex + i] || appendEmptyRow();
+      if (row.length > 0) target.children[0].innerText = row[0] || '';
+      if (row.length > 1) target.children[1].innerText = row[1] || '';
     }
   }
 
   function appendEmptyRow() {
-    const r = createEditableRow('', '');
+    const r = createRow('', '');
     tbody.appendChild(r);
     return r;
   }
 
-  function readTableData() {
+  function initRows(count = 12) {
+    tbody.innerHTML = '';
+    for (let i = 0; i < count; i++) tbody.appendChild(createRow('', ''));
+  }
+
+  function readData() {
     const out = [];
     for (const tr of tbody.querySelectorAll('tr')) {
       const a = tr.children[0].innerText.trim(), b = tr.children[1].innerText.trim();
@@ -255,119 +233,88 @@
     return out;
   }
 
-  // ---------- UI wiring ----------
-  const tbody = document.querySelector('#data-table tbody');
+  // UI references
   const fileInput = document.getElementById('file-csv');
   const btnFit = document.getElementById('btn-fit');
   const btnClear = document.getElementById('clear-table');
-  const fitTypeSelect = document.getElementById('fit-type');
-  const polyDegreeInput = document.getElementById('poly-degree');
+  const fitType = document.getElementById('fit-type');
+  const polyDegree = document.getElementById('poly-degree');
   const plotEl = document.getElementById('plot');
 
   // initial rows
-  function initTableRows(n = 10) {
-    tbody.innerHTML = '';
-    for (let i = 0; i < n; i++) appendEmptyRow();
-  }
-  initTableRows(12);
+  initRows(12);
 
   // CSV import
   fileInput.addEventListener('change', (ev) => {
-    const f = ev.target.files[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const parsed = Utils.parseCSV(reader.result);
+    const f = ev.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const parsed = Utils.parseCSV(r.result);
       tbody.innerHTML = '';
-      parsed.forEach(d => {
-        const r = createEditableRow(d.x, d.y);
-        tbody.appendChild(r);
-      });
+      parsed.forEach(d => tbody.appendChild(createRow(d.x, d.y)));
       appendEmptyRow();
     };
-    reader.readAsText(f);
+    r.readAsText(f);
   });
 
   // Clear table
   btnClear.addEventListener('click', () => {
-    initTableRows(12);
+    initRows(12);
     Plotly.purge(plotEl);
     Logger.clear();
   });
 
   // Fit button
   btnFit.addEventListener('click', () => {
-    const data = readTableData();
-    if (!data.length || data.length < 2) {
-      Logger.info('Enter at least two numeric rows (x,y).');
-      return;
-    }
+    const data = readData();
+    if (!data.length || data.length < 2) { Logger.set('Enter at least two numeric (x,y) rows.'); return; }
 
-    const type = fitTypeSelect.value;
     const t0 = performance.now();
-    let result = null;
-    if (type === 'linear') result = Regression.linearFit(data);
-    else if (type === 'polynomial') result = Regression.polynomialFit(data, Math.max(1, parseInt(polyDegreeInput.value || 2)));
-    else if (type === 'exponential') result = Regression.exponentialFit(data);
-    else if (type === 'logarithmic') result = Regression.logarithmicFit(data);
+    let res = null;
+    const type = fitType.value;
+    if (type === 'linear') res = Regression.linearFit(data);
+    else if (type === 'polynomial') res = Regression.polynomialFit(data, Math.max(1, parseInt(polyDegree.value || 2)));
+    else if (type === 'exponential') res = Regression.exponentialFit(data);
+    else if (type === 'logarithmic') res = Regression.logarithmicFit(data);
 
     const t1 = performance.now();
-    if (!result) {
-      Logger.info('Fit failed or insufficient data for selected model.');
-      return;
-    }
+    if (!res) { Logger.set('Fit failed or insufficient data for selected model.'); return; }
 
     // Plot
-    Plotter.plotScatterWithFit(plotEl, data, result.predict);
+    Plotter.plotScatterWithFit(plotEl, data, res.predict);
 
-    // Build result block (no timestamps)
+    // Build nice result summary
     let info = '';
-    if (result.type === 'linear') {
+    if (res.type === 'linear') {
       info += 'Fitting type: Linear\n';
       info += 'Equation form: y = m × x + b\n';
-      info += `Computed: m = ${Utils.round(result.coeffs[0],6)}   b = ${Utils.round(result.coeffs[1],6)}\n`;
-      info += `Resulting equation: y = ${Utils.round(result.coeffs[0],6)}x + ${Utils.round(result.coeffs[1],6)}\n`;
-      info += `Correlation coefficient (R²) = ${Utils.round(result.r2,6)}\n`;
-      info += `Standard error = ${Utils.round(result.stderr,6)}\n`;
-    } else if (result.type === 'polynomial') {
-      info += `Fitting type: Polynomial (degree ${result.degree})\n`;
-      info += `Coefficients: ${result.coeffs.map((c,i)=> `a${i}=${Utils.round(c,6)}`).join(', ')}\n`;
-      info += `R² = ${Utils.round(result.r2,6)}\nStd err = ${Utils.round(result.stderr,6)}\n`;
-    } else if (result.type === 'exponential') {
+      info += `Computed: m = ${Utils.round(res.coeffs[0],6)}   b = ${Utils.round(res.coeffs[1],6)}\n`;
+      info += `Resulting equation: y = ${Utils.round(res.coeffs[0],6)}x + ${Utils.round(res.coeffs[1],6)}\n`;
+      info += `Correlation coefficient (R²) = ${Utils.round(res.r2,6)}\n`;
+      info += `Standard error = ${Utils.round(res.stderr,6)}\n`;
+    } else if (res.type === 'polynomial') {
+      info += `Fitting type: Polynomial (degree ${res.degree})\n`;
+      info += `Coefficients: ${res.coeffs.map((c,i)=> `a${i}=${Utils.round(c,6)}`).join(', ')}\n`;
+      info += `R² = ${Utils.round(res.r2,6)}\nStd err = ${Utils.round(res.stderr,6)}\n`;
+    } else if (res.type === 'exponential') {
       info += 'Fitting type: Exponential\n';
-      info += `y = A × exp(B × x)\nA = ${Utils.round(result.coeffs[0],6)}, B = ${Utils.round(result.coeffs[1],6)}\n`;
-      info += `R² = ${Utils.round(result.r2,6)}\nStd err = ${Utils.round(result.stderr,6)}\n`;
-    } else if (result.type === 'logarithmic') {
+      info += `y = A × exp(B × x)\nA = ${Utils.round(res.coeffs[0],6)}, B = ${Utils.round(res.coeffs[1],6)}\n`;
+      info += `R² = ${Utils.round(res.r2,6)}\nStd err = ${Utils.round(res.stderr,6)}\n`;
+    } else if (res.type === 'logarithmic') {
       info += 'Fitting type: Logarithmic\n';
-      info += `y = A + B × ln(x)\nA = ${Utils.round(result.coeffs[0],6)}, B = ${Utils.round(result.coeffs[1],6)}\n`;
-      info += `R² = ${Utils.round(result.r2,6)}\nStd err = ${Utils.round(result.stderr,6)}\n`;
+      info += `y = A + B × ln(x)\nA = ${Utils.round(res.coeffs[0],6)}, B = ${Utils.round(res.coeffs[1],6)}\n`;
+      info += `R² = ${Utils.round(res.r2,6)}\nStd err = ${Utils.round(res.stderr,6)}\n`;
     }
     info += `Run time = ${((t1 - t0) / 1000).toFixed(4)} s`;
-
-    Logger.info(info);
+    Logger.set(info);
   });
 
-  // plot redraw on window resize (keeps visual)
+  // Keep references for replotting on resize
   window.addEventListener('resize', () => {
-    if (window.lastPlotData && window.lastFit) {
-      Plotter.plotScatterWithFit(plotEl, window.lastPlotData, window.lastFit.predict);
-    }
+    // replot if needed (Plotly is responsive)
+    // nothing mandatory here; Plotly handles responsive redraw
   });
 
-  // Keep references for replotting on theme or resize (we use them)
-  // (not strictly needed but handy)
-  window.lastFit = null;
-  window.lastPlotData = null;
-
-  // track last fit in the code above (set when plot happens)
-  const originalPlot = Plotter.plotScatterWithFit;
-  Plotter.plotScatterWithFit = function(el, data, predict) {
-    window.lastPlotData = data;
-    window.lastFit = { predict };
-    originalPlot(el, data, predict);
-  };
-
-  // expose small API for debugging if needed
-  window._InlineNode = { Regression, Plotter, Utils, Logger };
-
+  // expose for debugging if needed
+  window._InlineNode = { Utils, Regression, Logger, Plotter };
 })();
