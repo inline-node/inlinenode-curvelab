@@ -1,75 +1,85 @@
-/* CurveLab v0.7 — full fixed-grid. Courier New everywhere. */
-*{box-sizing:border-box;margin:0;padding:0;border-radius:0}
-html,body{height:100%;font-family:"Courier New",Courier,monospace;background:#e9ecef;color:#111}
-.layout{display:flex;height:100vh;width:100vw;overflow:hidden}
+/* v0.6: Flat CurveLab-first styles, Courier New everywhere, fixed panels */
 
-/* Sidebar */
-.sidebar{width:220px;background:#d6d8db;border-right:1px solid #bdbdbd;display:flex;flex-direction:column}
-.brand{font-weight:700;font-size:16px;padding:18px 12px;border-bottom:1px solid #bdbdbd}
-.side-nav{display:flex;flex-direction:column;padding:8px}
-.side-btn{background:transparent;border:0;text-align:left;padding:12px 10px;cursor:pointer;font-weight:700;color:#222}
-.side-btn.active{background:#cfcfd1}
+/* Colors & base */
+:root{
+  --bg: #eceff1;        /* not bright white */
+  --panel: #e3e6e9;     /* workspace surface */
+  --muted: #444;        /* text */
+  --accent: #2b6cff;    /* blue accent for buttons */
+  --text: #111;
+  --sidebar-width: 220px;
+}
+
+/* Global */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;padding:0;font-family: "Courier New", Courier, monospace;color:var(--text);background:var(--bg)}
+.app{display:flex;min-height:100vh}
+
+/* Sidebar - flat, no rounded corners */
+.sidebar{width:var(--sidebar-width);background:var(--panel);padding:18px;border-right:1px solid #d0d4d7;display:flex;flex-direction:column}
+.brand-title{font-weight:700;font-size:18px;margin-bottom:12px}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav-item{background:transparent;border:none;text-align:left;padding:10px 8px;cursor:pointer;color:var(--muted);font-weight:700;border:0}
+.nav-item.active{color:var(--accent);background:transparent}
+.nav-group{margin-top:10px}
+.group-toggle{background:transparent;border:none;padding:8px;color:var(--muted);cursor:pointer;font-weight:700}
+.nav-sub{display:none;flex-direction:column;margin-left:0;margin-top:6px}
+.nav-sub .nav-sub-item{background:transparent;border:none;text-align:left;padding:6px 6px;color:var(--muted);cursor:pointer}
 
 /* Main */
-.main{flex:1;display:flex;flex-direction:column;height:100%}
-.header{height:44px;line-height:44px;text-align:center;font-weight:700;border-bottom:1px solid #bdbdbd;background:#d6d8db}
+.main{flex:1;display:flex;flex-direction:column;min-height:0}
+.main-header{padding:14px 18px;border-bottom:1px solid #d0d4d7;background:var(--panel)}
+.main-header h1{margin:0;font-size:16px}
 
-/* Workspace grid:
-   left column fixed width (600px) and right column flexible.
-   Height is computed as remaining area above logger and footer.
-*/
-.workspace{
-  display:grid;
-  grid-template-columns: 600px 1fr;   /* fixed table width */
-  grid-template-rows: 1fr;            /* single row filling available space */
-  height: calc(100% - 44px - 200px - 32px); /* header (44) + logger (200) + footer (32) */
-  gap:0;
-}
+/* Workspace: two-column flat layout, no gaps between blocks */
+.workspace{display:flex;flex:1;min-height:0;padding:16px 18px;gap:12px}
+.panel{display:flex;flex:1;min-height:0}
+.panel-left{width:540px;display:flex;flex-direction:column;gap:12px;min-width:380px}
+.panel-right{flex:1;display:flex;flex-direction:column;gap:12px}
 
-/* left and right columns full height */
-.left-col{display:flex;flex-direction:column;border-right:1px solid #bdbdbd;height:100%}
-.right-col{display:flex;flex-direction:column;height:100%}
+/* Table block - flat rectangular look */
+.table-block{background:var(--panel);padding:0;border:1px solid #d0d4d7;display:flex;flex-direction:column;min-height:0}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #d0d4d7}
+.table-title{margin:0;font-weight:700}
+.import-topright{font-weight:700;padding:8px 14px;border:1px solid #bfc6d0;background:#fff;cursor:pointer}
+.table-wrap{overflow:auto;max-height:520px} /* fixed height, scrollbar inside */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table thead th{position:sticky;top:0;background:var(--panel);padding:10px 8px;text-align:left;color:var(--muted);font-weight:700;border-bottom:1px solid #d0d4d7;border-right:1px solid #c2c6c9}
+.data-table tbody td{padding:8px 8px;border-bottom:1px solid #d0d4d7;border-right:1px solid #c2c6c9}
+.data-table td[contenteditable]{outline:none;background:transparent;white-space:nowrap}
 
-/* Table header */
-.table-header{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #bdbdbd;background:#dfe1e3}
-.table-title{font-weight:700}
+/* footer of table with clear button bottom-right */
+.table-footer{display:flex;justify-content:flex-end;padding:10px 12px;border-top:1px solid #d0d4d7}
+.clear-bottomright{font-weight:700;padding:8px 14px;border:1px solid #bfc6d0;background:#fff;cursor:pointer}
 
-/* import btn */
-.import-btn{background:#2b6cff;color:#fff;padding:6px 10px;font-weight:700;cursor:pointer}
+/* Fit controls modern flat */
+.fit-block{background:var(--panel);padding:10px;border:1px solid #d0d4d7;display:flex;align-items:center;justify-content:flex-start;gap:8px}
+.modern-select{padding:8px;border:1px solid #bfc6d0;background:#fff;font-weight:700}
+.modern-input{padding:8px;border:1px solid #bfc6d0;background:#fff}
+.btn{cursor:pointer;border:0;background:var(--accent);color:#fff}
+.btn.modern{background:var(--accent);color:#fff;padding:10px 18px;font-weight:700;border:0}
+.btn.modern.small{padding:8px 12px}
+.btn.modern.large{padding:12px 20px}
 
-/* Table container: flex column; tbody scroll inside */
-.table-container{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.data-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
-.data-table thead{background:#e9ecef}
-.data-table th,.data-table td{border:1px solid #bdbdbd;padding:6px 8px;text-align:left}
-.data-table thead th{font-weight:700}
+/* Plot block fixed height */
+.plot-block{background:var(--panel);padding:12px;border:1px solid #d0d4d7;display:flex;flex-direction:column}
+.plot{height:520px;border:0;background:transparent}
 
-/* CRITICAL: tbody is scrollable and fixed height (inside .table-container) */
-.data-table tbody{display:block;overflow-y:auto;height:100%}
-.data-table thead, .data-table tbody tr{display:table;width:100%;table-layout:fixed}
-.data-table td[contenteditable]{background:transparent;outline:none;white-space:nowrap;overflow:hidden}
-
-/* Footer controls (always visible) */
-.table-footer{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-top:1px solid #bdbdbd;background:#dfe1e3}
-.controls-left{display:flex;gap:8px;align-items:center}
-.controls-right{display:flex;align-items:center}
-
-/* Buttons & inputs */
-.btn{background:#2b6cff;color:#fff;border:none;padding:6px 10px;font-weight:700;cursor:pointer}
-.btn.small{padding:4px 8px;font-size:12px}
-select,input[type=number]{font-family:"Courier New",Courier,monospace;padding:6px;border:1px solid #bdbdbd;background:#fff}
-
-/* Plot full right column */
-.plot{flex:1;width:100%;height:100%;background:#eef0f2;}
-
-/* Logger under workspace */
-.logger{height:200px;overflow:auto;border-top:1px solid #bdbdbd;background:#d6d8db;padding:10px;font-size:13px;white-space:pre-wrap}
+/* Logger fixed */
+.logger-wrap{padding:12px 18px}
+.logger{background:var(--panel);border:1px solid #d0d4d7;padding:10px;height:140px;overflow:auto;font-family:"Courier New",Courier,monospace;font-size:13px;color:var(--muted)}
+.logger div{white-space:pre-wrap;margin-bottom:6px}
 
 /* Footer */
-.footer{height:32px;line-height:32px;text-align:center;background:#d6d8db;border-top:1px solid #bdbdbd}
+.footer{text-align:center;color:var(--muted);padding:10px 0;font-size:12px}
 
-/* Small screens fallback */
-@media (max-width:1100px){
-  .workspace{grid-template-columns:1fr;grid-template-rows: 320px 1fr;height:calc(100% - 44px - 200px - 32px)}
-  .left-col{border-right:none}
+/* Responsive */
+@media (max-width:1000px){
+  .workspace{flex-direction:column;padding:12px}
+  .panel-left{width:100%;min-width:0}
+  .plot{height:280px}
+  .table-wrap{max-height:280px}
 }
+
+/* Remove rounded corners and shadows (flat) */
+*{border-radius:0;box-shadow:none}
