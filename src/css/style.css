@@ -1,4 +1,4 @@
-/* v0.7 full fixed-grid — Courier New everywhere, no rounded corners, no shadows */
+/* CurveLab v0.7 — full fixed-grid. Courier New everywhere. */
 *{box-sizing:border-box;margin:0;padding:0;border-radius:0}
 html,body{height:100%;font-family:"Courier New",Courier,monospace;background:#e9ecef;color:#111}
 .layout{display:flex;height:100vh;width:100vw;overflow:hidden}
@@ -14,57 +14,62 @@ html,body{height:100%;font-family:"Courier New",Courier,monospace;background:#e9
 .main{flex:1;display:flex;flex-direction:column;height:100%}
 .header{height:44px;line-height:44px;text-align:center;font-weight:700;border-bottom:1px solid #bdbdbd;background:#d6d8db}
 
-/* Workspace (grid) */
+/* Workspace grid:
+   left column fixed width (600px) and right column flexible.
+   Height is computed as remaining area above logger and footer.
+*/
 .workspace{
   display:grid;
-  grid-template-columns: 600px 1fr;       /* left column fixed width, right flexible */
-  grid-template-rows: 1fr;                /* single row */
-  height: calc(100% - 44px - 200px - 32px); /* subtract header + logger + footer spacing */
+  grid-template-columns: 600px 1fr;   /* fixed table width */
+  grid-template-rows: 1fr;            /* single row filling available space */
+  height: calc(100% - 44px - 200px - 32px); /* header (44) + logger (200) + footer (32) */
   gap:0;
 }
 
-/* left and right column */
+/* left and right columns full height */
 .left-col{display:flex;flex-direction:column;border-right:1px solid #bdbdbd;height:100%}
 .right-col{display:flex;flex-direction:column;height:100%}
 
-/* table header */
+/* Table header */
 .table-header{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #bdbdbd;background:#dfe1e3}
 .table-title{font-weight:700}
 
-/* import button styled */
+/* import btn */
 .import-btn{background:#2b6cff;color:#fff;padding:6px 10px;font-weight:700;cursor:pointer}
 
-/* table container fixed height and internal scroll */
-.table-container{flex:1;overflow:hidden;display:flex;flex-direction:column}
-#data-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
-#data-table thead{background:#e9ecef}
-#data-table th,#data-table td{border:1px solid #bdbdbd;padding:6px 8px;text-align:left}
-#data-table thead th{font-weight:700}
-#data-table tbody{display:block;height:100%;overflow-y:auto}
-#data-table thead, #data-table tbody tr{display:table;width:100%;table-layout:fixed}
-#data-table td[contenteditable]{background:transparent;outline:none;white-space:nowrap;overflow:hidden}
+/* Table container: flex column; tbody scroll inside */
+.table-container{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.data-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+.data-table thead{background:#e9ecef}
+.data-table th,.data-table td{border:1px solid #bdbdbd;padding:6px 8px;text-align:left}
+.data-table thead th{font-weight:700}
 
-/* footer controls that live at bottom of left column */
+/* CRITICAL: tbody is scrollable and fixed height (inside .table-container) */
+.data-table tbody{display:block;overflow-y:auto;height:100%}
+.data-table thead, .data-table tbody tr{display:table;width:100%;table-layout:fixed}
+.data-table td[contenteditable]{background:transparent;outline:none;white-space:nowrap;overflow:hidden}
+
+/* Footer controls (always visible) */
 .table-footer{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-top:1px solid #bdbdbd;background:#dfe1e3}
 .controls-left{display:flex;gap:8px;align-items:center}
 .controls-right{display:flex;align-items:center}
 
-/* buttons & inputs */
+/* Buttons & inputs */
 .btn{background:#2b6cff;color:#fff;border:none;padding:6px 10px;font-weight:700;cursor:pointer}
 .btn.small{padding:4px 8px;font-size:12px}
 select,input[type=number]{font-family:"Courier New",Courier,monospace;padding:6px;border:1px solid #bdbdbd;background:#fff}
 
-/* plot occupies full right column area */
-.plot{flex:1;width:100%;height:100%;background:#eef0f2}
+/* Plot full right column */
+.plot{flex:1;width:100%;height:100%;background:#eef0f2;}
 
-/* logger under both columns */
+/* Logger under workspace */
 .logger{height:200px;overflow:auto;border-top:1px solid #bdbdbd;background:#d6d8db;padding:10px;font-size:13px;white-space:pre-wrap}
 
-/* footer at very bottom */
+/* Footer */
 .footer{height:32px;line-height:32px;text-align:center;background:#d6d8db;border-top:1px solid #bdbdbd}
 
-/* responsiveness (small screens) */
+/* Small screens fallback */
 @media (max-width:1100px){
-  .workspace{grid-template-columns: 1fr; grid-template-rows: 320px 1fr; height: calc(100% - 44px - 200px - 32px);}
+  .workspace{grid-template-columns:1fr;grid-template-rows: 320px 1fr;height:calc(100% - 44px - 200px - 32px)}
   .left-col{border-right:none}
 }
