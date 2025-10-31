@@ -1,8 +1,6 @@
-// main.js - wiring nav, theme auto-detect, spreadsheet, fits, CSV & logger integration
+// main.js - CurveLab-first wiring: nav, spreadsheet, paste, CSV import, fit, and logger-only results
 document.addEventListener('DOMContentLoaded', ()=> {
-  Logger.info('InlineNode v0.5 loaded.');
-
-  // NAV
+  // NAV wiring (no logging)
   const navItems = document.querySelectorAll('.nav-item');
   const subItems = document.querySelectorAll('.nav-sub-item');
   const views = document.querySelectorAll('.view');
@@ -13,43 +11,22 @@ document.addEventListener('DOMContentLoaded', ()=> {
     navItems.forEach(n=> n.classList.toggle('active', n.dataset.view === id));
     subItems.forEach(s=> s.classList.toggle('active', s.dataset.view === id));
     title.textContent = (id === 'curvelab') ? 'CurveLab' : (id.startsWith('elec-') ? 'ElecTools — ' + document.querySelector(`[data-view="${id}"]`).textContent : (id.charAt(0).toUpperCase()+id.slice(1)));
-    Logger.info(`Switched to view: ${id}`);
-    // if switching to curve, replot if last fit exists
-    if (id === 'curvelab' && window.lastFitResult) {
-      Plotter.plotScatterWithFit(document.getElementById('plot'), window.curveData || [], window.lastFitResult.predict || (()=>0), getTheme());
-    }
   }
 
   document.querySelectorAll('.nav-item').forEach(btn=> btn.addEventListener('click', ()=> showView(btn.dataset.view)));
   document.querySelectorAll('.nav-sub-item').forEach(btn=> btn.addEventListener('click', ()=> showView(btn.dataset.view)));
 
-  // collapsible
+  // Collapsible ElecTools (visual only)
   const groupToggle = document.querySelector('.group-toggle');
   const electoolsSub = document.getElementById('electools-sub');
-  groupToggle.addEventListener('click', ()=> {
-    const open = electoolsSub.style.display === 'flex';
-    electoolsSub.style.display = open ? 'none' : 'flex';
-    groupToggle.textContent = open ? 'ElecTools ▾' : 'ElecTools ▴';
-  });
-  electoolsSub.style.display = 'none';
-
-  // THEME auto-detect + persist
-  const app = document.getElementById('app');
-  const themeSwitch = document.getElementById('theme-switch');
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const saved = localStorage.getItem('inlinenode-theme');
-  const initial = saved || (prefersDark ? 'dark' : 'light');
-  setTheme(initial);
-  themeSwitch.checked = (initial === 'dark');
-  themeSwitch.addEventListener('change', ()=> setTheme(themeSwitch.checked ? 'dark' : 'light'));
-
-  function setTheme(t){
-    app.setAttribute('data-theme', t);
-    localStorage.setItem('inlinenode-theme', t);
-    Logger.info(`Theme set to ${t}`);
-    if (window.lastFitResult) Plotter.plotScatterWithFit(document.getElementById('plot'), window.curveData || [], window.lastFitResult.predict || (()=>0), t);
+  if (groupToggle) {
+    groupToggle.addEventListener('click', ()=> {
+      const open = electoolsSub.style.display === 'flex';
+      electoolsSub.style.display = open ? 'none' : 'flex';
+      groupToggle.textContent = open ? 'ElecTools ▾' : 'ElecTools ▴';
+    });
+    electoolsSub.style.display = 'none';
   }
-  function getTheme(){ return app.getAttribute('data-theme') || 'light'; }
 
   // SPREADSHEET
   const tbody = document.querySelector('#data-table tbody');
@@ -72,7 +49,12 @@ document.addEventListener('DOMContentLoaded', ()=> {
       if (cell.nextElementSibling) { cell.nextElementSibling.focus(); selectAll(cell.nextElementSibling); }
       else { const last = newRow('',''); last.firstChild.focus(); }
     }
-    setTimeout(()=> { const rows = tbody.querySelectorAll('tr'); const lastRow = rows[rows.length-1]; const any = Array.from(lastRow.children).some(td=>td.innerText.trim() !== ''); if (any) newRow('',''); }, 10);
+    setTimeout(()=> {
+      const rows = tbody.querySelectorAll('tr');
+      const lastRow = rows[rows.length-1];
+      const any = Array.from(lastRow.children).some(td=>td.innerText.trim() !== '');
+      if (any) newRow('','');
+    }, 10);
   }
 
   function selectAll(el) { const sel = window.getSelection(); const range = document.createRange(); range.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(range); }
@@ -89,42 +71,39 @@ document.addEventListener('DOMContentLoaded', ()=> {
       if (row.length > 0) targetRow.children[0].innerText = row[0] || '';
       if (row.length > 1) targetRow.children[1].innerText = row[1] || '';
     }
-    const lastRow = tbody.lastElementChild; const any = Array.from(lastRow.children).some(td=>td.innerText.trim() !== ''); if (any) newRow('','');
-    Logger.info('Pasted data into table.');
+    const lastRow = tbody.lastElementChild;
+    const any = Array.from(lastRow.children).some(td=>td.innerText.trim() !== '');
+    if (any) newRow('','');
   }
 
   // initial rows
   tbody.innerHTML = '';
   for (let i=0;i<8;i++) newRow('','');
 
-  // CSV file import/export/clear
-  document.getElementById('file-csv').addEventListener('change', (ev) => {
-    const f = ev.target.files[0]; if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const parsed = Utils.parseCSV(reader.result);
-      loadDataToTable(parsed);
-      Logger.ok(`Imported ${parsed.length} rows from CSV.`);
-    };
-    reader.readAsText(f);
-  });
+  // CSV import only (top-right)
+  const fileInput = document.getElementById('file-csv');
+  if (fileInput) {
+    fileInput.addEventListener('change', (ev) => {
+      const f = ev.target.files[0]; if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const parsed = Utils.parseCSV(reader.result);
+        loadDataToTable(parsed);
+        Logger.info(`Fitted data imported (${parsed.length} rows).`);
+      };
+      reader.readAsText(f);
+    });
+  }
 
-  document.getElementById('export-csv').addEventListener('click', () => {
-    const data = readTableData();
-    if (!data.length) { alert('No numeric data to export.'); return; }
-    const xs = data.map(d=>d.x); const ys = data.map(d=>d.y);
-    Utils.downloadText('data.csv', Utils.csvFromArray(xs, ys));
-    Logger.ok(`Exported ${data.length} rows to CSV.`);
-  });
-
+  // Clear table (bottom-right)
   document.getElementById('clear-table').addEventListener('click', () => {
     tbody.innerHTML = '';
     for (let i=0;i<6;i++) newRow('','');
     window.curveData = [];
     Plotly.purge(document.getElementById('plot'));
-    document.getElementById('fit-info').textContent = '';
     window.lastFitResult = null;
-    Logger.info('Table cleared.');
+    Logger.info(''); // clear visual separation
+    Logger.clear();
   });
 
   function loadDataToTable(data){
@@ -143,14 +122,14 @@ document.addEventListener('DOMContentLoaded', ()=> {
     return out;
   }
 
-  // fit controls
-  const fitType = document.getElementById('fit-type'); const degLabel = document.getElementById('deg-label'); const degInput = document.getElementById('poly-degree');
-  fitType.addEventListener('change', () => { if (fitType.value === 'polynomial'){ degLabel.style.display=''; degInput.style.display=''; } else { degLabel.style.display='none'; degInput.style.display='none'; } });
+  // Fit controls
+  const fitType = document.getElementById('fit-type');
+  const degInput = document.getElementById('poly-degree');
+  fitType.addEventListener('change', () => { degInput.style.display = (fitType.value === 'polynomial') ? '' : 'none'; });
 
   document.getElementById('btn-fit').addEventListener('click', () => {
     const data = readTableData(); if (!data.length || data.length < 2){ alert('Enter at least two valid (x,y) rows.'); return; }
     window.curveData = data; const type = fitType.value; let result = null;
-    Logger.info('Fitting started: ' + type);
     const t0 = performance.now();
     if (type === 'linear') result = Regression.linearFit(data);
     else if (type === 'polynomial') result = Regression.polynomialFit(data, Math.max(1, parseInt(degInput.value || 2)));
@@ -158,33 +137,39 @@ document.addEventListener('DOMContentLoaded', ()=> {
     else if (type === 'logarithmic') result = Regression.logarithmicFit(data);
     const t1 = performance.now();
 
-    if (!result){ document.getElementById('fit-info').textContent = 'Fit failed or insufficient data for selected model.'; Logger.err('Fit failed.'); return; }
+    if (!result){ Logger.clear(); Logger.info('Fit failed or insufficient data for selected model.'); return; }
     window.lastFitResult = result;
-    Plotter.plotScatterWithFit(document.getElementById('plot'), data, result.predict, getTheme());
+    Plotter.plotScatterWithFit(document.getElementById('plot'), data, result.predict);
 
-    // build info block (detailed)
+    // Build result only log (no timestamps)
     let info = '';
     if (type === 'linear'){
-      info += 'Equation form: y = m × x + b\nWhere:\n  y → dependent variable\n  x → independent variable\n  m → slope\n  b → y-intercept\n\n';
-      info += `Computed: y = ${Utils.round(result.coeffs[0],6)} × x + ${Utils.round(result.coeffs[1],6)}\nCorrelation coefficient (R²) = ${Utils.round(result.r2,6)}\nStandard error = ${Utils.round(result.stderr,6)}\nRun time = ${((t1-t0)/1000).toFixed(4)} s\n`;
+      info += 'Fitting type: Linear\n';
+      info += 'Equation form: y = m × x + b\n';
+      info += `Computed: m = ${Utils.round(result.coeffs[0],6)}   b = ${Utils.round(result.coeffs[1],6)}\n`;
+      info += `Resulting equation: y = ${Utils.round(result.coeffs[0],6)}x + ${Utils.round(result.coeffs[1],6)}\n`;
+      info += `Correlation coefficient (R²) = ${Utils.round(result.r2,6)}\n`;
+      info += `Standard error = ${Utils.round(result.stderr,6)}\n`;
+      info += `Run time = ${((t1-t0)/1000).toFixed(4)} s`;
     } else if (type === 'polynomial'){
-      info += `Polynomial degree ${result.degree}\nComputed coefficients:\n`;
-      const coeffs = result.coeffs.map((c,i)=> `a${i}=${Utils.round(c,6)}`).join(', ');
-      info += `${coeffs}\nCorrelation coefficient (R²) = ${Utils.round(result.r2,6)}\nStandard error = ${Utils.round(result.stderr,6)}\nRun time = ${((t1-t0)/1000).toFixed(4)} s\n`;
+      info += `Fitting type: Polynomial (degree ${result.degree})\n`;
+      info += `Coefficients: ${result.coeffs.map((c,i)=> `a${i}=${Utils.round(c,6)}`).join(', ')}\n`;
+      info += `R² = ${Utils.round(result.r2,6)}\nStd err = ${Utils.round(result.stderr,6)}\nRun time = ${((t1-t0)/1000).toFixed(4)} s`;
     } else if (type === 'exponential'){
-      info += 'Equation form: y = A × exp(B × x)\n';
-      info += `Computed: A = ${Utils.round(result.coeffs[0],6)}, B = ${Utils.round(result.coeffs[1],6)}\nR² = ${Utils.round(result.r2,6)}\nStd err = ${Utils.round(result.stderr,6)}\nRun time = ${((t1-t0)/1000).toFixed(4)} s\n`;
+      info += 'Fitting type: Exponential\n';
+      info += `y = A × exp(B × x)\nA = ${Utils.round(result.coeffs[0],6)}, B = ${Utils.round(result.coeffs[1],6)}\n`;
+      info += `R² = ${Utils.round(result.r2,6)}\nStd err = ${Utils.round(result.stderr,6)}\nRun time = ${((t1-t0)/1000).toFixed(4)} s`;
     } else if (type === 'logarithmic'){
-      info += 'Equation form: y = A + B × ln(x)\n';
-      info += `Computed: A = ${Utils.round(result.coeffs[0],6)}, B = ${Utils.round(result.coeffs[1],6)}\nR² = ${Utils.round(result.r2,6)}\nStd err = ${Utils.round(result.stderr,6)}\nRun time = ${((t1-t0)/1000).toFixed(4)} s\n`;
+      info += 'Fitting type: Logarithmic\n';
+      info += `y = A + B × ln(x)\nA = ${Utils.round(result.coeffs[0],6)}, B = ${Utils.round(result.coeffs[1],6)}\n`;
+      info += `R² = ${Utils.round(result.r2,6)}\nStd err = ${Utils.round(result.stderr,6)}\nRun time = ${((t1-t0)/1000).toFixed(4)} s`;
     }
-    document.getElementById('fit-info').textContent = info;
-    Logger.ok('Fit completed. ' + ((t1-t0)/1000).toFixed(4) + ' s');
+
+    // Replace logger content with the result block
+    Logger.clear();
+    Logger.info(info);
   });
 
-  // init ElecTools
-  Elec.init();
-
-  // expose theme getter
-  window.getTheme = getTheme;
+  // expose small API
+  window.getCurveData = () => window.curveData || [];
 });
